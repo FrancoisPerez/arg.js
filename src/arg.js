@@ -26,17 +26,17 @@
 
 */
 
-(function(global){
+(function(global) {
 
   /**
    * MakeArg makes the Arg namespace.
    * var Arg = MakeArg();
    */
-  global.MakeArg = function(){
+  global.MakeArg = function() {
 
     /** @namespace
      */
-    var Arg = function(){
+    var Arg = function() {
       return Arg.get.apply(global, arguments);
     };
     Arg.version = "1.1.0";
@@ -44,16 +44,17 @@
     /**
      * Parses the arg string into an Arg.Arg object.
      */
-    Arg.parse = function(s){
+    Arg.parse = function(s) {
       if (!s) return {};
-      if (s.indexOf("=")===-1 && s.indexOf("&")===-1) return {};
+      if (s.indexOf("=") === -1 && s.indexOf("&") === -1) return {};
       s = Arg._cleanParamStr(s);
       var obj = {};
       var pairs = s.split("&");
       for (var pi in pairs) {
-        if(pairs.hasOwnProperty(pi)){
+        if (pairs.hasOwnProperty(pi)) {
           var kvsegs = pairs[pi].split("=");
-          var key = decodeURIComponent(kvsegs[0]), val = decodeURIComponent(kvsegs[1]);
+          var key = decodeURIComponent(kvsegs[0]),
+            val = decodeURIComponent(kvsegs[1]);
           Arg._access(obj, key, val);
         }
       }
@@ -73,9 +74,9 @@
       var shouldSet = typeof value !== "undefined";
       var selectorBreak = -1;
       var coerce_types = {
-        'true'  : true,
-        'false' : false,
-        'null'  : null
+        'true': true,
+        'false': false,
+        'null': null
       };
 
       // selector could be a number if we're at a numerical index leaf in which case selector.search is not valid
@@ -86,10 +87,10 @@
       // No dot or array notation so we're at a leaf, set value
       if (selectorBreak === -1) {
         if (Arg.coerceMode) {
-          value = value && !isNaN(value)            ? +value              // number
-                : value === 'undefined'             ? undefined           // undefined
-                : coerce_types[value] !== undefined ? coerce_types[value] // true, false, null
-                : value;                                                  // string
+          value = value && !isNaN(value) ? +value // number
+          : value === 'undefined' ? undefined // undefined
+          : coerce_types[value] !== undefined ? coerce_types[value] // true, false, null
+          : value; // string
         }
         return shouldSet ? (obj[selector] = value) : obj[selector];
       }
@@ -127,30 +128,30 @@
     Arg.stringify = function(obj, keyPrefix) {
 
       switch (typeof(obj)) {
-      case "object":
-        var segs = [];
-        var thisKey;
-        for (var key in obj) {
+        case "object":
+          var segs = [];
+          var thisKey;
+          for (var key in obj) {
 
-          if (!obj.hasOwnProperty(key)) continue;
-          var val = obj[key];
+            if (!obj.hasOwnProperty(key)) continue;
+            var val = obj[key];
 
-          if (typeof(key) === "undefined" || key.length === 0 || typeof(val) === "undefined") continue;
+            if (typeof(key) === "undefined" || key.length === 0 || typeof(val) === "undefined") continue;
 
-          thisKey = keyPrefix ? keyPrefix+"."+key : key;
+            thisKey = keyPrefix ? keyPrefix + "." + key : key;
 
-          if (typeof obj.length !== "undefined") {
-            thisKey = keyPrefix ? keyPrefix+"["+key+"]" : key;
+            if (typeof obj.length !== "undefined") {
+              thisKey = keyPrefix ? keyPrefix + "[" + key + "]" : key;
+            }
+
+            if (typeof val === "object") {
+              segs.push(Arg.stringify(val, thisKey));
+            } else {
+              segs.push(encodeURIComponent(thisKey) + "=" + encodeURIComponent(val));
+            }
+
           }
-
-          if (typeof val === "object") {
-            segs.push(Arg.stringify(val, thisKey));
-          } else {
-            segs.push(encodeURIComponent(thisKey)+"="+encodeURIComponent(val));
-          }
-
-        }
-        return segs.join("&");
+          return segs.join("&");
       }
 
       return encodeURIComponent(obj);
@@ -164,28 +165,28 @@
      * (path, object, object) = A URL to the specified path with the first object as query parameters,
      * and the second object as hash parameters.
      */
-    Arg.url = function(){
+    Arg.url = function() {
 
       var sep = (Arg.urlUseHash ? Arg.hashQuerySeperator : Arg.querySeperator);
       var segs = [location.pathname, sep];
       var args = {};
 
       switch (arguments.length) {
-      case 1: // Arg.url(params)
-        segs.push(Arg.stringify(arguments[0]));
-        break;
-      case 2: // Arg.url(path, params)
-        segs[0] = Arg._cleanPath(arguments[0]);
-        args = Arg.parse(arguments[0]);
-        args = Arg.merge(args, arguments[1]);
-        segs.push(Arg.stringify(args));
-        break;
-      case 3: // Arg.url(path, query, hash)
-        segs[0] = Arg._cleanPath(arguments[0]);
-        segs[1] = Arg.querySeperator;
-        segs.push(Arg.stringify(arguments[1]));
-        (typeof(arguments[2])==="string") ? segs.push(Arg.hashSeperator) : segs.push(Arg.hashQuerySeperator);
-        segs.push(Arg.stringify(arguments[2]));
+        case 1: // Arg.url(params)
+          segs.push(Arg.stringify(arguments[0]));
+          break;
+        case 2: // Arg.url(path, params)
+          segs[0] = Arg._cleanPath(arguments[0]);
+          args = Arg.parse(arguments[0]);
+          args = Arg.merge(args, arguments[1]);
+          segs.push(Arg.stringify(args));
+          break;
+        case 3: // Arg.url(path, query, hash)
+          segs[0] = Arg._cleanPath(arguments[0]);
+          segs[1] = Arg.querySeperator;
+          segs.push(Arg.stringify(arguments[1]));
+          (typeof(arguments[2]) === "string") ? segs.push(Arg.hashSeperator) : segs.push(Arg.hashQuerySeperator);
+          segs.push(Arg.stringify(arguments[2]));
       }
 
       var s = segs.join("");
@@ -217,7 +218,7 @@
     /**
      * Gets all parameters from the current URL.
      */
-    Arg.all = function(){
+    Arg.all = function() {
       var merged = Arg.parse(Arg.querystring() + "&" + Arg.hashstring());
       return Arg._all ? Arg._all : Arg._all = merged;
     };
@@ -225,7 +226,7 @@
     /**
      * Gets a parameter from the URL.
      */
-    Arg.get = function(selector, def){
+    Arg.get = function(selector, def) {
       var val = Arg._access(Arg.all(), selector);
       return typeof(val) === "undefined" ? def : val;
     };
@@ -233,43 +234,43 @@
     /**
      * Gets the query string parameters from the current URL.
      */
-    Arg.query = function(){
+    Arg.query = function() {
       return Arg._query ? Arg._query : Arg._query = Arg.parse(Arg.querystring());
     };
 
     /**
      * Gets the hash string parameters from the current URL.
      */
-    Arg.hash = function(){
+    Arg.hash = function() {
       return Arg._hash ? Arg._hash : Arg._hash = Arg.parse(Arg.hashstring());
     };
 
     /**
      * Gets the query string from the URL (the part after the ?).
      */
-    Arg.querystring = function(){
+    Arg.querystring = function() {
       return Arg._cleanParamStr(location.search);
     };
 
     /**
      * Gets the hash param string from the URL (the part after the #).
      */
-    Arg.hashstring = function(){
+    Arg.hashstring = function() {
       return Arg._cleanParamStr(location.hash)
     };
 
     /*
      * Cleans the URL parameter string stripping # and ? from the beginning.
      */
-    Arg._cleanParamStr = function(s){
+    Arg._cleanParamStr = function(s) {
 
-      if (s.indexOf(Arg.querySeperator)>-1)
+      if (s.indexOf(Arg.querySeperator) > -1)
         s = s.split(Arg.querySeperator)[1];
 
-      if (s.indexOf(Arg.hashSeperator)>-1)
+      if (s.indexOf(Arg.hashSeperator) > -1)
         s = s.split(Arg.hashSeperator)[1];
 
-      if (s.indexOf("=")===-1 && s.indexOf("&")===-1)
+      if (s.indexOf("=") === -1 && s.indexOf("&") === -1)
         return "";
 
       while (s.indexOf(Arg.hashSeperator) == 0 || s.indexOf(Arg.querySeperator) == 0)
@@ -278,13 +279,13 @@
       return s;
     };
 
-    Arg._cleanPath = function(p){
+    Arg._cleanPath = function(p) {
 
-      if (p.indexOf(Arg.querySeperator)>-1)
-        p = p.substr(0,p.indexOf(Arg.querySeperator));
+      if (p.indexOf(Arg.querySeperator) > -1)
+        p = p.substr(0, p.indexOf(Arg.querySeperator));
 
-      if (p.indexOf(Arg.hashSeperator)>-1)
-        p = p.substr(0,p.indexOf(Arg.hashSeperator));
+      if (p.indexOf(Arg.hashSeperator) > -1)
+        p = p.substr(0, p.indexOf(Arg.hashSeperator));
 
       return p;
     };
@@ -292,12 +293,12 @@
     /**
      * Merges all the arguments into a new object.
      */
-    Arg.merge = function(){
+    Arg.merge = function() {
       var all = {};
-      for (var ai in arguments){
-        if(arguments.hasOwnProperty(ai)){
-          for (var k in arguments[ai]){
-            if(arguments[ai].hasOwnProperty(k)){
+      for (var ai in arguments) {
+        if (arguments.hasOwnProperty(ai)) {
+          for (var k in arguments[ai]) {
+            if (arguments[ai].hasOwnProperty(k)) {
               all[k] = arguments[ai][k];
             }
           }
