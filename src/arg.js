@@ -88,9 +88,25 @@
 					value = value && !isNaN(value) ? +value // number
 					: value === 'undefined' ? undefined // undefined
 					: coerce_types[value] !== undefined ? coerce_types[value] // true, false, null
-					: value; // string
+					: Arg.__decode(value); // string
 				}
-				return shouldSet ? (obj[selector] = value) : obj[selector];
+				if (shouldSet) {
+					if (value.indexOf("[") !== -1 && value.indexOf("]") !== -1) {
+						var arr = JSON.parse(decodeURIComponent(value.replace('[', '["').replace(',', '","').replace(']', '"]')));
+						var out = [];
+						for(var o in arr){
+							if(arr.hasOwnProperty(o)){
+								out[o] = Arg.parse(arr[o]);
+							}
+						}
+						return obj[selector] = out;
+					} else if (value.indexOf("=") === -1 && value.indexOf("&") === -1) {
+						return obj[selector] = value;
+					}
+					return obj[selector] = Arg.parse('?' + value);
+				} else {
+					return obj[selector];
+				}
 			}
 
 			// Example:
